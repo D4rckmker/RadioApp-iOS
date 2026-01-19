@@ -1,24 +1,49 @@
 import SwiftUI
+
 struct ContentView: View {
-    @State private var stationCount: Int = 0
+    @State private var viewModel = StationsViewModel()
     
     var body: some View {
-        VStack {
-            Text("Estaciones cargadas: \(stationCount)")
-                .font(.title)
+        NavigationStack {
+            Group {
+                switch viewModel.stationsState {
+                case .idle, .loading:
+                    ProgressView("Cargando estaciones...")
+                    
+                case .loaded:
+                    List(viewModel.filteredStations) { station in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(station.title)
+                                .font(.headline)
+                            Text(station.description)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("\(station.views) oyentes")
+                                .font(.caption2)
+                                .foregroundStyle(.blue)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
+                    }
+                    
+                case .error(let message):
+                    ContentUnavailableView(
+                        "Error al cargar",
+                        systemImage: "wifi.exclamationmark",
+                        description: Text(message)
+                    )
+                }
+            }
+            .navigationTitle("R Station")
         }
         .task {
-            await loadStations()
+            await viewModel.loadInitialData()
         }
     }
-    
-    func loadStations() async {
-        do {
-            let response = try await RadioAPIService.shared.fetchStations()
-            stationCount = response.data.count
-            print("✅ Cargadas \(response.total) estaciones")
-        } catch {
-            print("❌ Error: \(error.localizedDescription)")
-        }
-    }
+}
+
+#Preview {
+    ContentView()
 }
