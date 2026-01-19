@@ -1,7 +1,6 @@
 import Foundation
 
 // MARK: - Información de reproducción actual
-// Este modelo se usará cuando hagamos peticiones a url_api de cada estación
 struct NowPlaying: Codable {
     let title: String?
     let artist: String?
@@ -18,7 +17,7 @@ struct NowPlaying: Codable {
 }
 
 // MARK: - Estado del reproductor
-enum PlayerState {
+enum PlayerState: Equatable {
     case stopped
     case loading
     case playing
